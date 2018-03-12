@@ -1,0 +1,117 @@
+#+TITLE: Emacs configuration
+
+* Emacs configuration
+
+** Some basic configuration
+- disable the startup screen
+- Disable bell sound
+- set global line number mode
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-screen t)
+  (setq visible-bell 1)
+  (global-linum-mode t)
+#+END_SRC
+
+** Basic package management
+#+BEGIN_SRC emacs-lisp
+  (require 'package)
+  (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                      (not (gnutls-available-p))))
+         (proto (if no-ssl "http" "https")))
+    ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
+    (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+    ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+    (when (< emacs-major-version 24)
+      ;; For important compatibility libraries like cl-lib
+      (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
+  (package-initialize)
+
+#+END_SRC
+
+*** Install use package if not already installed
+#+BEGIN_SRC emacs-lisp
+(if (not (package-installed-p 'use-package))
+    (progn
+      (package-refresh-contents)
+      (package-install 'use-package)))
+
+(eval-when-compile
+  (require 'use-package))
+#+END_SRC
+
+ 
+
+** Theme settings
+#+BEGIN_SRC emacs-lisp
+(load-theme 'monokai t)
+#+END_SRC
+
+
+** Auto complete (Company mode)
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :ensure t
+    :defer t
+    :init (global-company-mode)
+    :config
+    (setq company-idle-delay 0))
+#+END_SRC
+
+Add the anaconda bindings
+#+BEGIN_SRC emacs-lisp
+(use-package company-anaconda
+  :ensure t
+  :config (add-to-list 'company-backends 'company-anaconda))
+#+END_SRC
+
+
+# ;; Auto-complete configuration 
+# ;; (ac-config-default)
+# ;; '(ac-auto-show-menu 0.0)
+# ;; '(ac-delay 0.0)
+# ;; '(ac-trigger-commands (quote (self-insert-command \.)))
+# ;; '(ac-trigger-key "TAB")
+
+** LaTeX configuration
+Configure Auctex
+#+BEGIN_SRC emacs-lisp
+  (use-package tex
+    :ensure auctex
+    :defer t
+    :config
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t)
+    (setq-default TeX-master nil)
+    (setq TeX-view-program-selection (quote (((output-dvi has-no-display-manager) "dvi2tty") ((output-dvi style-pstricks) "dvips and gv") (output-pdf "Okular") (output-dvi "xdvi") (output-pdf "Evince") (output-html "xdg-open"))))
+    (setq TeX-error-overview-open-after-TeX-run t))
+
+#+END_SRC
+
+**  Php configuration
+#+BEGIN_SRC emacs-lisp
+  (use-package php-mode 
+    :mode ("\\.php\\'" "\\.inc\\'" "\\.module\\'"))
+#+END_SRC
+
+** Org mode configuration
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :defer t
+
+    :init
+    (setq org-agenda-files (list "/mnt/other/dropbox/Dropbox/org_files"))
+    
+    :bind
+    ("C-c a" . org-agenda)
+    ("C-c r" . org-capture)
+    ("C-c l" . org-store-link)
+    ("C-c b" . org-iswitchb))
+#+END_SRC
+ 
+Org bullets
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bullets
+    :ensure t
+    :defer t
+    :init (add-hook 'org-mode-hook 'org-bullets-mode))
+#+END_SRC
