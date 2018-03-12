@@ -1,0 +1,20 @@
+[user]
+	name = Abhay Mittal
+	email = mittalabhay94@gmail.com
+[core]
+	autocrlf = input
+	safecrlf = warn
+	editor = emacs
+[push]
+	default = simple
+[color]
+	ui = true
+	status = auto
+	branch = auto
+[alias]
+
+	hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+[merge]
+	tool = kdiff3
+[diff]
+	guitool = kdiff3
