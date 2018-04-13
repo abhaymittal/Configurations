@@ -1,4 +1,5 @@
-export TERM="xterm-256color" 
+export TERM="xterm-256color"
+export EDITOR="emacs -nw"
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile 
 HISTSIZE=1000 
@@ -99,7 +100,7 @@ alias jn="jupyter notebook"
 PATH="/mnt/lindata/software/idea-IC-172.4155.36/bin:$PATH"
 
 # Google cloud SDK
-PATH="/mnt/lindata/software/google-cloud-sdk/bin:$PATH"
+# PATH="/mnt/lindata/software/google-cloud-sdk/bin:$PATH"
 
 #MATLAB
 MATLABPATH="/home/abhay/.config/matlab"
