@@ -98,7 +98,7 @@ Configure Auctex
 
 #+END_SRC
 
-**  Php configuration
+** Php configuration
 #+BEGIN_SRC emacs-lisp
   (use-package php-mode 
     :mode ("\\.php\\'" "\\.inc\\'" "\\.module\\'"))
@@ -106,21 +106,39 @@ Configure Auctex
 
 ** Org mode configuration
 #+BEGIN_SRC emacs-lisp
-  (use-package org
-    :defer t
+    (use-package org
+      :defer t
 
-    :init
-    (setq org-agenda-files (list "/mnt/other/dropbox/Dropbox/org_files"))
-    (setq org-log-done 'time)
-    (setq org-default-notes-file "/mnt/other/dropbox/Dropbox/org_files/refile.org")
-    (setq org-startup-indented t)
+      :init
+      (setq org-agenda-files (list
+                              "/mnt/other/dropbox/Dropbox/org_files"
+                                   "~/notes/notes.org"))
+      (setq org-log-done 'time)
+      (setq org-default-notes-file "/mnt/other/dropbox/Dropbox/org_files/refile.org")
+      (setq org-startup-indented t)
 
-    
-    :bind
-    ("C-c a" . org-agenda)
-    ("C-c r" . org-capture)
-    ("C-c l" . org-store-link)
-    ("C-c b" . org-iswitchb))
+      
+      :bind
+      ("C-c a" . org-agenda)
+      ("C-c r" . org-capture)
+      ("C-c l" . org-store-link)
+      ("C-c b" . org-iswitchb))
+#+END_SRC
+
+*** Tags
+#+BEGIN_SRC emacs-lisp
+  (setq org-tag-alist (quote (
+                              ("article"   . ?a)
+                              ("code"      . ?c)
+                              ("errands"   . ?e)
+                              ("idea"      . ?d)
+                              ("job"       . ?j)
+                              ("meeting"   . ?m)
+                              ("note"      . ?n)
+                              ("personal"  . ?i)
+                              ("learning"  . ?l)
+                              ("project"   . ?p)
+                              ("work"      . ?w))))
 #+END_SRC
  
 *** Org bullets
@@ -132,6 +150,29 @@ Configure Auctex
 #+END_SRC
 
 *** Configuration for Note taking from pdfs
+
+Refer to [[https://www.reddit.com/r/emacs/comments/4gudyw/help_me_with_my_orgmode_workflow_for_notetaking/][this link]] for the source.
+**** Org-Ref 
+[[https://github.com/jkitchin/org-ref][Link]]
+#+BEGIN_SRC emacs-lisp
+  (use-package org-ref
+    :ensure t
+    :defer t
+    :init 
+    (progn
+      (setq org-ref-bibliography-notes "~/notes/notes.org"
+            org-ref-default-bibliography '("~/notes/articles.bib")
+            org-ref-pdf-directory "~/notes/pdfs/")
+      (use-package parsebib
+        :ensure t))
+
+  )
+
+#+END_SRC
+***** Parsebib 
+Though this is a dependency for some reason I need to install it
+
+
 
 **** Interleave
 Interleave pdfs: [[https://github.com/rudolfochrist/interleave][Link]]
@@ -145,6 +186,34 @@ Interleave pdfs: [[https://github.com/rudolfochrist/interleave][Link]]
 
 **** [[*Configuration%20for%20ivy-bibtex][Configuration for ivy-bibtex]]
 
+*** Org Capture
+
+**** Templates
+#+BEGIN_SRC emacs-lisp
+  (setq org-capture-templates '(
+                                          ; Papers
+                                ("a"               ; key
+                                 "Article"         ; name
+                                 entry             ; type
+                                 (file+headline "~/notes/notes.org" "Article")  ; target
+                                 "* %^{Title} %(org-set-tags)  :article: \n:PROPERTIES:\n:Created: %U\n:Linked: %a\n:END:\n%i\nBrief description:\n%?"  ; template
+                                 :prepend t        ; properties
+                                 :empty-lines 1    ; properties
+                                 :created t        ; properties
+                                 )
+                                          ;TODO tag
+                                ("t"          ; key
+                                 "Todos" ; name
+                                 entry        ; type
+                                 "TODO %^{Title} %^G\n:PROPERTIES:\n:Created: %U\n:Linked: %A\n:END:\n%i\n%?" ; template
+                                 :prepend t        ; properties
+                                 :empty-lines 1    ; properties
+                                 :created t        ; properties
+                                 :kill-buffer t) ; properties
+
+                                ))
+
+#+END_SRC
 ** Python Configuration
 Configure [[https://github.com/jorgenschaefer/elpy][Elpy]]
 #+BEGIN_SRC emacs-lisp
@@ -195,3 +264,14 @@ Configurations for [[https://github.com/abo-abo/swiper][Ivy mode]].
 
 
 *** Configuration for ivy-bibtex
+#+BEGIN_SRC emacs-lisp
+  (use-package ivy-bibtex
+    :ensure t
+    :defer t
+    :config
+    ((setq bibtex-completion-bibliography "~/notes/articles.bib"
+        bibtex-completion-library-path "~/notes/pdfs"
+        bibtex-completion-notes-path "~/notes/articles.org")
+  ))
+
+#+END_SRC
