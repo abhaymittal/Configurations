@@ -160,7 +160,7 @@ Refer to [[https://www.reddit.com/r/emacs/comments/4gudyw/help_me_with_my_orgmod
     :defer t
     :init 
     (progn
-      (setq org-ref-bibliography-notes "~/notes/notes.org"
+      (setq org-ref-bibliography-notes "~/notes/articles.org"
             org-ref-default-bibliography '("~/notes/articles.bib")
             org-ref-pdf-directory "~/notes/pdfs/")
       (use-package parsebib
@@ -265,13 +265,43 @@ Configurations for [[https://github.com/abo-abo/swiper][Ivy mode]].
 
 *** Configuration for ivy-bibtex
 #+BEGIN_SRC emacs-lisp
-  (use-package ivy-bibtex
-    :ensure t
-    :defer t
-    :config
-    ((setq bibtex-completion-bibliography "~/notes/articles.bib"
-        bibtex-completion-library-path "~/notes/pdfs"
-        bibtex-completion-notes-path "~/notes/articles.org")
-  ))
+    (use-package ivy-bibtex
+      :ensure t
+      :defer t
+      :config
+      ( progn
+        (setq bibtex-completion-bibliography "~/notes/articles.bib"
+              bibtex-completion-library-path "~/notes/pdfs/"
+              bibtex-completion-notes-path "~/notes/articles.org")
+        ))
 
+#+END_SRC
+
+** pdf-tools
+#+BEGIN_SRC emacs-lisp
+  (defun my-pdf-tools-hook()
+    (linum-mode -1) ; line numbers choke emacs
+    )
+#+END_SRC
+
+
+(not using require as its not necessary that I have sudo privileges on the machine 
+to install pdf-tools system dependencies)
+
+Adding the following keybinds:
+| key | function        |
+|-----+-----------------|
+| h   | highlight       |
+| d   | delete          |
+| t   | text annotation |
+|     |                 |
+
+#+BEGIN_SRC emacs-lisp
+    (use-package pdf-tools
+      :config
+      (pdf-tools-install)
+      (add-hook 'pdf-view-mode-hook 'my-pdf-tools-hook)
+      (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
+      (define-key pdf-view-mode-map (kbd "t") 'pdf-annot-add-text-annotation)
+      (define-key pdf-view-mode-map (kbd "d") 'pdf-annot-delete))
 #+END_SRC
