@@ -8,6 +8,7 @@
 3) set global line number mode
 4) set font size
 5) always open split windows to the right
+6) set visual line mode for text wrapping
 #+BEGIN_SRC emacs-lisp
   (setq inhibit-startup-screen t)
   (setq visible-bell 1)
@@ -15,6 +16,29 @@
   (set-face-attribute 'default nil :height 180)
   (setq split-height-threshold nil)
   (setq split-width-threshold 100)
+  (global-visual-line-mode)
+#+END_SRC
+
+
+The following configuration sets a directory for backup (.*~) and auto-save  (#*#)  files which populate the directories and are so annoying. 
+#+BEGIN_SRC emacs-lisp
+  (setq backup-directory-alist '(("." . "~/.emacs.d/backups"))
+        version-control t     ; use versioned backups
+        delete-old-versions t 
+        kept-new-versions 3 ; 3 most recent versions
+        kept-old-versions 0) ; No oldest versions
+  (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+#+END_SRC
+
+Remove the toolbar and show clock in bottom mode line
+#+BEGIN_SRC emacs-lisp
+  (tool-bar-mode -1)
+  (display-time-mode 1)
+#+END_SRC
+
+Change the required yes-no prompt to y-n
+#+BEGIN_SRC emacs-lisp
+  (fset 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
 ** Basic package management
@@ -296,12 +320,27 @@ Adding the following keybinds:
 | t   | text annotation |
 |     |                 |
 
+Also, setup C-s to do regular isearch instead of using Swiper as that searches the binary of the pdf
 #+BEGIN_SRC emacs-lisp
-    (use-package pdf-tools
-      :config
-      (pdf-tools-install)
-      (add-hook 'pdf-view-mode-hook 'my-pdf-tools-hook)
-      (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
-      (define-key pdf-view-mode-map (kbd "t") 'pdf-annot-add-text-annotation)
-      (define-key pdf-view-mode-map (kbd "d") 'pdf-annot-delete))
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install)
+    (add-hook 'pdf-view-mode-hook 'my-pdf-tools-hook)
+    (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
+    (define-key pdf-view-mode-map (kbd "t") 'pdf-annot-add-text-annotation)
+    (define-key pdf-view-mode-map (kbd "d") 'pdf-annot-delete)
+    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
+#+END_SRC
+
+** Undo / Redo
+Setup [[https://www.emacswiki.org/emacs/UndoTree][undo-tree]] for easy undo/redos. Config from [[https://github.com/sachac/.emacs.d/blob/gh-pages/Sacha.org#undo-tree-mode---visualize-your-undos-and-branches]].
+#+BEGIN_SRC emacs-lisp
+  (use-package undo-tree
+    :ensure t
+    :diminish undo-tree-mode
+    :config
+    (progn
+      (global-undo-tree-mode)
+      (setq undo-tree-visualizer-timestamps t)
+      (setq undo-tree-visualizer-diff t)))
 #+END_SRC
