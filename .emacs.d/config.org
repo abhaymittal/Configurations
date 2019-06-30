@@ -249,7 +249,8 @@ Configure [[https://github.com/jorgenschaefer/elpy][Elpy]]
     ;; :defer t
     :config
     (progn
-      (elpy-enable)))
+      (elpy-enable)
+      (setq elpy-rpc-python-command "python3")))
 
 #+END_SRC
 
@@ -360,4 +361,15 @@ Install [[https://github.com/justbur/emacs-which-key][which key]]
       (which-key-setup-minibuffer)
       (which-key-mode))
      )
+#+END_SRC
+
+*** Hydra
+Install [[https://github.com/abo-abo/hydra][hydra]]
+
+#+BEGIN_SRC emacs-lisp
+  (use-package hydra
+    :ensure t
+    )
+
+
 #+END_SRC

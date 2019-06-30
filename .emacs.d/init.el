@@ -16,7 +16,8 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (swiper counsel electric-operator use-package php-mode org-ref monokai-theme elpy company-anaconda auctex ac-anaconda))))
+    (swiper counsel electric-operator use-package php-mode org-ref monokai-theme elpy company-anaconda auctex ac-anaconda)))
+ '(python-shell-interpreter "python3"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
