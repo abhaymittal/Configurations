@@ -78,7 +78,10 @@ Change the required yes-no prompt to y-n
 
 ** Theme settings
 #+BEGIN_SRC emacs-lisp
-(load-theme 'monokai t)
+  (use-package monokai-theme
+    :ensure t
+    :config
+    (load-theme 'monokai t))
 #+END_SRC
 
 
@@ -303,9 +306,9 @@ Configurations for [[https://github.com/abo-abo/swiper][Ivy mode]].
 
 ** pdf-tools
 #+BEGIN_SRC emacs-lisp
-  (defun my-pdf-tools-hook()
-    (linum-mode -1) ; line numbers choke emacs
-    )
+  ;; (defun my-pdf-tools-hook()
+  ;;   (linum-mode -1) ; line numbers choke emacs
+  ;;   )
 #+END_SRC
 
 
@@ -322,14 +325,14 @@ Adding the following keybinds:
 
 Also, setup C-s to do regular isearch instead of using Swiper as that searches the binary of the pdf
 #+BEGIN_SRC emacs-lisp
-  (use-package pdf-tools
-    :config
-    (pdf-tools-install)
-    (add-hook 'pdf-view-mode-hook 'my-pdf-tools-hook)
-    (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
-    (define-key pdf-view-mode-map (kbd "t") 'pdf-annot-add-text-annotation)
-    (define-key pdf-view-mode-map (kbd "d") 'pdf-annot-delete)
-    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
+  ;; (use-package pdf-tools
+  ;;   :config
+  ;;   (pdf-tools-install)
+  ;;   (add-hook 'pdf-view-mode-hook 'my-pdf-tools-hook)
+  ;;   (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
+  ;;   (define-key pdf-view-mode-map (kbd "t") 'pdf-annot-add-text-annotation)
+  ;;   (define-key pdf-view-mode-map (kbd "d") 'pdf-annot-delete)
+  ;;   (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
 #+END_SRC
 
 ** Undo / Redo
@@ -343,4 +346,18 @@ Setup [[https://www.emacswiki.org/emacs/UndoTree][undo-tree]] for easy undo/redo
       (global-undo-tree-mode)
       (setq undo-tree-visualizer-timestamps t)
       (setq undo-tree-visualizer-diff t)))
+#+END_SRC
+
+** Productivity Tools
+
+*** Which key
+Install [[https://github.com/justbur/emacs-which-key][which key]]
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :ensure t
+    :config
+    (progn
+      (which-key-setup-minibuffer)
+      (which-key-mode))
+     )
 #+END_SRC
