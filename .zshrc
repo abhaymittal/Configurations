@@ -87,20 +87,18 @@ if ! zgen saved; then
 fi
 
 # Theme settings
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(anaconda context dir rbenv vcs)
-POWERLEVEL9K_ANACONDA_BACKGROUND="yellow"
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir rbenv vcs)
+POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
+POWERLEVEL9K_PROMPT_ON_NEWLINE=true
+POWERLEVEL9K_DIR_DEFAULT_BACKGROUND='039' #blue
+POWERLEVEL9K_DIR_DEFAULT_FOREGROUND='000' #alpha
+POWERLEVEL9K_DIR_HOME_BACKGROUND='039' ##blue
+POWERLEVEL9K_DIR_HOME_FOREGROUND='000' #alpha
+POWERLEVEL9K_DIR_HOME_SUBFOLDER_BACKGROUND='039' #blue
+POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND='000' #alpha
+POWERLEVEL9K_DIR_WRITABLE_FORBIDDEN_BACKGROUND='196' #red
+POWERLEVEL9K_DIR_WRITABLE_FORBIDDEN_FOREGROUND='226' #yellow
 
-PATH="/home/abhay/anaconda2/bin:$PATH"
 
 # Alias for jupyter
 alias jn="jupyter notebook"
-
-
-# IntelliJ
-PATH="/mnt/lindata/software/idea-IC-172.4155.36/bin:$PATH"
-
-# Google cloud SDK
-# PATH="/mnt/lindata/software/google-cloud-sdk/bin:$PATH"
-
-#MATLAB
-MATLABPATH="/home/abhay/.config/matlab"
