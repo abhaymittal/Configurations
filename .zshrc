@@ -62,18 +62,20 @@ source "${HOME}/.zgen/zgen.zsh"
 
 if ! zgen saved; then
     echo "Creating a zgen save"
-    zgen oh-my-zsh
     # plugins
     zgen oh-my-zsh plugins/git
     zgen oh-my-zsh plugins/sudo
+    zgen oh-my-zsh plugins/zsh-autosuggestions
+    zgen oh-my-zsh plugins/autojump
+
     zgen load zsh-users/zsh-syntax-highlighting
     zgen load zsh-users/zsh-history-substring-search
 
     # completions
     zgen load zsh-users/zsh-completions src
-
     # theme
-    zgen load bhilburn/powerlevel9k powerlevel9k
+    # zgen load bhilburn/powerlevel9k powerlevel9k
+    zgen load romkatv/powerlevel10k powerlevel10k
     
     # Alias tips for remembering aliases
     zgen load djui/alias-tips
@@ -102,3 +104,59 @@ POWERLEVEL9K_DIR_WRITABLE_FORBIDDEN_FOREGROUND='226' #yellow
 
 # Alias for jupyter
 alias jn="jupyter notebook"
+alias l='ls -lah'
+alias la='ls -lAh'
+alias ll='ls -lh'
+alias ls='ls --color=tty'
+alias lsa='ls -lah'
+alias md='mkdir -p'
+alias p=pwd
+alias psef='ps -ef'
+alias rd=rmdir
+alias run-help=man
+
+
+
+# Copy the history file part from oh_my_zsh
+## History wrapper
+function omz_history {
+  local clear list
+  zparseopts -E c=clear l=list
+
+  if [[ -n "$clear" ]]; then
+    # if -c provided, clobber the history file
+    echo -n >| "$HISTFILE"
+    echo >&2 History file deleted. Reload the session to see its effects.
+  elif [[ -n "$list" ]]; then
+    # if -l provided, run as if calling `fc' directly
+    builtin fc "$@"
+  else
+    # unless a number is provided, show all history events (starting from 1)
+    [[ ${@[-1]-} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
+  fi
+}
+
+# Timestamp format
+case ${HIST_STAMPS-} in
+  "mm/dd/yyyy") alias history='omz_history -f' ;;
+  "dd.mm.yyyy") alias history='omz_history -E' ;;
+  "yyyy-mm-dd") alias history='omz_history -i' ;;
+  "") alias history='omz_history' ;;
+  *) alias history="omz_history -t '$HIST_STAMPS'" ;;
+esac
+
+## History file configuration
+[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=10000
+
+## History command configuration
+setopt extended_history       # record timestamp of command in HISTFILE
+setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
+setopt hist_ignore_dups       # ignore duplicated commands history list
+setopt hist_ignore_space      # ignore commands that start with space
+setopt hist_verify            # show command with history expansion to user before running it
+setopt inc_append_history     # add commands to HISTFILE in order of execution
+setopt share_history          # share command history data
+
+alias history=omz_history
