@@ -12,6 +12,9 @@ Quiet startup, no GUI chrome, generous font, sensible splits, soft line wrapping
         ring-bell-function     'ignore
         use-dialog-box         nil
         use-short-answers      t)        ; y/n instead of yes/no, Emacs 28+
+  ;; Belt and suspenders for any older code path that calls yes-or-no-p
+  ;; directly without honoring use-short-answers.
+  (fset 'yes-or-no-p 'y-or-n-p)
 
   ;; Modern line numbers (display-line-numbers-mode replaces linum)
   (global-display-line-numbers-mode 1)
@@ -89,7 +92,43 @@ above for a one-line swap.
     :demand t
     :config
     (setq catppuccin-flavor 'mocha)
-    (load-theme 'catppuccin :no-confirm))
+    (load-theme 'catppuccin :no-confirm)
+
+    ;; Terminal mode: catppuccin's default modeline contrast is too subtle.
+    ;; Force a clear visual separation between buffer / modeline / minibuffer.
+    (let ((surface0 "#313244")
+          (surface1 "#45475a")
+          (surface2 "#585b70")
+          (lavender "#b4befe")
+          (text     "#cdd6f4")
+          (overlay0 "#6c7086"))
+      (set-face-attribute 'mode-line nil
+                          :background surface1
+                          :foreground text
+                          :overline   lavender)
+      (set-face-attribute 'mode-line-inactive nil
+                          :background surface0
+                          :foreground overlay0
+                          :overline   surface2)
+      (set-face-attribute 'minibuffer-prompt nil
+                          :foreground lavender
+                          :weight 'bold))
+    ;; Minibuffer: give it a clearly distinct background so search results
+    ;; (consult-line, vertico) don't blend into the buffer above the modeline.
+    (defun my/minibuffer-distinct-bg ()
+      (setq-local face-remapping-alist
+                  '((default :background "#181825"))))   ; mantle — darker than base
+    (add-hook 'minibuffer-setup-hook #'my/minibuffer-distinct-bg)
+
+    ;; vertico-current must be set after vertico loads; the surrounding `let`
+    ;; bindings won't survive the deferred call, so colors are inlined here.
+    (with-eval-after-load 'vertico
+      (set-face-attribute 'vertico-current nil
+                          :background "#45475a"   ; surface1 — pops against mantle
+                          :foreground "#cdd6f4"   ; text
+                          :weight 'bold
+                          :extend t)))
+#+END_SRC
 #+END_SRC
 
 * Modeline & icons

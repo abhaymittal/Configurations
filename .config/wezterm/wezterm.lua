@@ -20,7 +20,7 @@ config.font = wezterm.font_with_fallback {
   { family = 'Symbols Nerd Font Mono' },     -- icons for eza, etc.
   { family = 'Apple Color Emoji' },
 }
-config.font_size = 14.0
+config.font_size = 18.0
 config.line_height = 1.1
 config.harfbuzz_features = { 'calt=1', 'clig=1', 'liga=1' }   -- ligatures on
 

@@ -113,9 +113,33 @@ if command -v bat >/dev/null 2>&1; then
 fi
 
 if command -v eza >/dev/null 2>&1; then
-  alias ls='eza --icons --git --group-directories-first --time-style=relative'
+  # ls() — eza wrapper that accepts common ls-style flag clusters.
+  # Translations:
+  #   -h          dropped silently (eza is always human-readable; eza's -h means --header)
+  #   -t          becomes --sort=newest (eza's -t requires a value: which time field)
+  #   --color=*   dropped (eza uses its own coloring)
+  # Anything else passes straight through to eza. Use `\ls ...` to bypass entirely.
+  ls() {
+    local args=() a cleaned has_t=0
+    for a in "$@"; do
+      if [[ "$a" =~ ^-[a-zA-Z]+$ ]]; then
+        cleaned="${a//[ht]/}"
+        [[ "$a" == *t* ]] && has_t=1
+        [[ "$cleaned" != "-" ]] && args+=("$cleaned")
+      elif [[ "$a" == --color* ]]; then
+        :
+      else
+        args+=("$a")
+      fi
+    done
+    (( has_t )) && args+=(--sort=newest)
+    command eza --icons --git --group-directories-first --time-style=relative "${args[@]}"
+  }
+
   alias ll='eza -l --icons --git --group-directories-first --time-style=relative'
   alias la='eza -la --icons --git --group-directories-first --time-style=relative'
+  alias lt='eza -l --icons --git --sort=newest'              # newest first
+  alias ltr='eza -l --icons --git --sort=newest --reverse'   # oldest first (like ls -ltr)
   alias tree='eza --tree --icons --git'
 fi
 

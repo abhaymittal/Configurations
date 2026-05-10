@@ -8,7 +8,7 @@
 [core]
 	autocrlf = input
 	safecrlf = warn
-	editor = emacsclient -a "" -nw
+	editor = nano
 	excludesfile = ~/.config/git/ignore
 	pager = delta
 

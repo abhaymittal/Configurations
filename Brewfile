@@ -26,4 +26,5 @@ brew "jq"
 # brew to manage updates.
 # cask "wezterm"
 cask "font-jetbrains-mono"
-cask "font-symbols-only-nerd-font"
+cask "font-jetbrains-mono-nerd-font"   # all-in-one (icons + ligatures); for terminals that don't do font fallback (iTerm2)
+cask "font-symbols-only-nerd-font"     # icons-only fallback used by WezTerm config
