@@ -1,375 +1,285 @@
 #+TITLE: Emacs configuration
+#+AUTHOR: Abhay Mittal
+#+PROPERTY: header-args :results silent
 
-* Emacs configuration
+* Sanity & visual basics
 
-** Some basic configuration
-1) disable the startup screen
-2) Disable bell sound
-3) set global line number mode
-4) set font size
-5) always open split windows to the right
-6) set visual line mode for text wrapping
+Quiet startup, no GUI chrome, generous font, sensible splits, soft line wrapping.
+
 #+BEGIN_SRC emacs-lisp
-  (setq inhibit-startup-screen t)
-  (setq visible-bell 1)
-  (global-linum-mode t)
-  (set-face-attribute 'default nil :height 180)
-  (setq split-height-threshold nil)
-  (setq split-width-threshold 100)
-  (global-visual-line-mode)
-#+END_SRC
+  (setq inhibit-startup-screen t
+        visible-bell           1
+        ring-bell-function     'ignore
+        use-dialog-box         nil
+        use-short-answers      t)        ; y/n instead of yes/no, Emacs 28+
 
+  ;; Modern line numbers (display-line-numbers-mode replaces linum)
+  (global-display-line-numbers-mode 1)
 
-The following configuration sets a directory for backup (.*~) and auto-save  (#*#)  files which populate the directories and are so annoying. 
-#+BEGIN_SRC emacs-lisp
-  (setq backup-directory-alist '(("." . "~/.emacs.d/backups"))
-        version-control t     ; use versioned backups
-        delete-old-versions t 
-        kept-new-versions 3 ; 3 most recent versions
-        kept-old-versions 0) ; No oldest versions
-  (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
-#+END_SRC
+  ;; Soft line wrap
+  (global-visual-line-mode 1)
 
-Remove the toolbar and show clock in bottom mode line
-#+BEGIN_SRC emacs-lisp
-  (tool-bar-mode -1)
+  ;; Splits prefer side-by-side
+  (setq split-height-threshold nil
+        split-width-threshold  100)
+
+  ;; Font (only set when running graphical Emacs)
+  (when (display-graphic-p)
+    (set-face-attribute 'default nil :family "JetBrains Mono" :height 160))
+
+  ;; Strip GUI chrome
+  (when (fboundp 'tool-bar-mode)   (tool-bar-mode -1))
+  (when (fboundp 'menu-bar-mode)   (menu-bar-mode -1))
+  (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+  (when (fboundp 'fringe-mode)     (fringe-mode 8))
+
+  ;; Pixel-precise smooth scrolling (Emacs 29+)
+  (when (fboundp 'pixel-scroll-precision-mode)
+    (pixel-scroll-precision-mode 1))
+
+  ;; Frame transparency to match WezTerm. alpha-background is Emacs 29+.
+  (when (boundp 'default-frame-alist)
+    (add-to-list 'default-frame-alist '(alpha-background . 92)))
+
+  ;; Modeline clock
   (display-time-mode 1)
 #+END_SRC
 
-Change the required yes-no prompt to y-n
+* Backups & auto-saves go in dedicated dirs
+
 #+BEGIN_SRC emacs-lisp
-  (fset 'yes-or-no-p 'y-or-n-p)
+  (setq backup-directory-alist `(("." . ,(expand-file-name "backups" user-emacs-directory)))
+        version-control       t
+        delete-old-versions   t
+        kept-new-versions     3
+        kept-old-versions     0
+        auto-save-file-name-transforms
+        `((".*" ,(expand-file-name "auto-save-list/" user-emacs-directory) t)))
 #+END_SRC
 
-** Basic package management
-#+BEGIN_SRC emacs-lisp
-  (require 'package)
-  (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-                      (not (gnutls-available-p))))
-         (proto (if no-ssl "http" "https")))
-    ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
-    (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
-    ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-    (when (< emacs-major-version 24)
-      ;; For important compatibility libraries like cl-lib
-      (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
-  (package-initialize)
+* macOS: import shell PATH
 
+So Emacs.app launched from Finder sees the same PATH as your shell.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package exec-path-from-shell
+    :demand t
+    :if (memq window-system '(mac ns))
+    :config (exec-path-from-shell-initialize))
 #+END_SRC
 
-*** Install use package if not already installed
-#+BEGIN_SRC emacs-lisp
-(if (not (package-installed-p 'use-package))
-    (progn
-      (package-refresh-contents)
-      (package-install 'use-package)))
+* Keep ~/.emacs.d clean
 
-(eval-when-compile
-  (require 'use-package))
+#+BEGIN_SRC emacs-lisp
+  (use-package no-littering
+    :demand t)
 #+END_SRC
 
- 
-*** Diminish package
-[[https://github.com/myrjola/diminish.el][Link]]
-#+BEGIN_SRC emacs-lisp
-  (use-package diminish
-    :ensure t)
-#+END_SRC
+* Theme
 
-** Theme settings
+Catppuccin Mocha to match WezTerm and tmux. Monokai block kept commented just
+above for a one-line swap.
+
 #+BEGIN_SRC emacs-lisp
-  (use-package monokai-theme
-    :ensure t
+  ;; Alternative theme — uncomment these two lines and comment the catppuccin
+  ;; block to swap back to Monokai:
+  ;; (use-package monokai-theme :demand t :config (load-theme 'monokai t))
+
+  (use-package catppuccin-theme
+    :demand t
     :config
-    (load-theme 'monokai t))
+    (setq catppuccin-flavor 'mocha)
+    (load-theme 'catppuccin :no-confirm))
 #+END_SRC
 
+* Modeline & icons
 
-** Auto complete (Company mode)
 #+BEGIN_SRC emacs-lisp
-  (use-package company
-    :ensure t
-    :defer t
-    :init (global-company-mode)
+  (use-package nerd-icons
+    :demand t)
+
+  (use-package doom-modeline
+    :demand t
+    :init   (doom-modeline-mode 1)
+    :config (setq doom-modeline-height 28
+                  doom-modeline-bar-width 4
+                  doom-modeline-icon t
+                  doom-modeline-major-mode-icon t
+                  doom-modeline-buffer-encoding nil))
+#+END_SRC
+
+* Visual polish
+
+#+BEGIN_SRC emacs-lisp
+  ;; Spacious padding around windows and modeline.
+  (use-package spacious-padding
+    :demand t
+    :config (spacious-padding-mode 1))
+
+  ;; Gentle pulse on the cursor line after a big jump.
+  (use-package pulsar
+    :demand t
     :config
-    (setq company-idle-delay 0))
+    (setq pulsar-pulse t
+          pulsar-delay 0.04
+          pulsar-iterations 10
+          pulsar-face 'pulsar-magenta)
+    (pulsar-global-mode 1)
+    (add-hook 'next-error-hook #'pulsar-pulse-line))
 #+END_SRC
 
-Add the anaconda bindings
+* Minibuffer completion: vertico + consult + marginalia + orderless
+
+Modern selectrum-family stack, replaces ivy/swiper/counsel.
+
 #+BEGIN_SRC emacs-lisp
-(use-package company-anaconda
-  :ensure t
-  :config (add-to-list 'company-backends 'company-anaconda))
-#+END_SRC
+  (use-package vertico
+    :demand t
+    :init (vertico-mode 1)
+    :config (setq vertico-cycle t
+                  vertico-resize t))
 
+  (use-package marginalia
+    :demand t
+    :init (marginalia-mode 1))
 
-# ;; Auto-complete configuration 
-# ;; (ac-config-default)
-# ;; '(ac-auto-show-menu 0.0)
-# ;; '(ac-delay 0.0)
-# ;; '(ac-trigger-commands (quote (self-insert-command \.)))
-# ;; '(ac-trigger-key "TAB")
-
-** LaTeX configuration
-Configure Auctex
-#+BEGIN_SRC emacs-lisp
-  (use-package tex
-    :ensure auctex
-    :defer t
+  (use-package orderless
+    :demand t
     :config
-    (setq TeX-auto-save t)
-    (setq TeX-parse-self t)
-    (setq-default TeX-master nil)
-    (setq TeX-view-program-selection (quote (((output-dvi has-no-display-manager) "dvi2tty") ((output-dvi style-pstricks) "dvips and gv") (output-pdf "Okular") (output-dvi "xdvi") (output-pdf "Evince") (output-html "xdg-open"))))
-    (setq TeX-error-overview-open-after-TeX-run t))
+    (setq completion-styles '(orderless basic)
+          completion-category-overrides '((file (styles basic partial-completion)))))
 
-#+END_SRC
+  (use-package consult
+    :bind (("C-s"   . consult-line)
+           ("C-x b" . consult-buffer)
+           ("M-y"   . consult-yank-pop)
+           ("M-g g" . consult-goto-line)
+           ("M-g i" . consult-imenu)))
 
-** Php configuration
-#+BEGIN_SRC emacs-lisp
-  (use-package php-mode 
-    :mode ("\\.php\\'" "\\.inc\\'" "\\.module\\'"))
-#+END_SRC
-
-** Org mode configuration
-#+BEGIN_SRC emacs-lisp
-    (use-package org
-      :defer t
-
-      :init
-      (setq org-agenda-files (list
-                              "/mnt/other/dropbox/Dropbox/org_files"
-                                   "~/notes/notes.org"))
-      (setq org-log-done 'time)
-      (setq org-default-notes-file "/mnt/other/dropbox/Dropbox/org_files/refile.org")
-      (setq org-startup-indented t)
-
-      
-      :bind
-      ("C-c a" . org-agenda)
-      ("C-c r" . org-capture)
-      ("C-c l" . org-store-link)
-      ("C-c b" . org-iswitchb))
-#+END_SRC
-
-*** Tags
-#+BEGIN_SRC emacs-lisp
-  (setq org-tag-alist (quote (
-                              ("article"   . ?a)
-                              ("code"      . ?c)
-                              ("errands"   . ?e)
-                              ("idea"      . ?d)
-                              ("job"       . ?j)
-                              ("meeting"   . ?m)
-                              ("note"      . ?n)
-                              ("personal"  . ?i)
-                              ("learning"  . ?l)
-                              ("project"   . ?p)
-                              ("work"      . ?w))))
-#+END_SRC
- 
-*** Org bullets
-#+BEGIN_SRC emacs-lisp
-  (use-package org-bullets
-    :ensure t
-    :defer t
-    :init (add-hook 'org-mode-hook 'org-bullets-mode))
-#+END_SRC
-
-*** Configuration for Note taking from pdfs
-
-Refer to [[https://www.reddit.com/r/emacs/comments/4gudyw/help_me_with_my_orgmode_workflow_for_notetaking/][this link]] for the source.
-**** Org-Ref 
-[[https://github.com/jkitchin/org-ref][Link]]
-#+BEGIN_SRC emacs-lisp
-  (use-package org-ref
-    :ensure t
-    :defer t
-    :init 
-    (progn
-      (setq org-ref-bibliography-notes "~/notes/articles.org"
-            org-ref-default-bibliography '("~/notes/articles.bib")
-            org-ref-pdf-directory "~/notes/pdfs/")
-      (use-package parsebib
-        :ensure t))
-
-  )
-
-#+END_SRC
-***** Parsebib 
-Though this is a dependency for some reason I need to install it
-
-
-
-**** Interleave
-Interleave pdfs: [[https://github.com/rudolfochrist/interleave][Link]]
-#+BEGIN_SRC emacs-lisp
-  (use-package interleave
-    :ensure t
-    :defer t)
-#+END_SRC
-
-
-
-**** [[*Configuration%20for%20ivy-bibtex][Configuration for ivy-bibtex]]
-
-*** Org Capture
-
-**** Templates
-#+BEGIN_SRC emacs-lisp
-  (setq org-capture-templates '(
-                                          ; Papers
-                                ("a"               ; key
-                                 "Article"         ; name
-                                 entry             ; type
-                                 (file+headline "~/notes/notes.org" "Article")  ; target
-                                 "* %^{Title} %(org-set-tags)  :article: \n:PROPERTIES:\n:Created: %U\n:Linked: %a\n:END:\n%i\nBrief description:\n%?"  ; template
-                                 :prepend t        ; properties
-                                 :empty-lines 1    ; properties
-                                 :created t        ; properties
-                                 )
-                                          ;TODO tag
-                                ("t"          ; key
-                                 "Todos" ; name
-                                 entry        ; type
-                                 "TODO %^{Title} %^G\n:PROPERTIES:\n:Created: %U\n:Linked: %A\n:END:\n%i\n%?" ; template
-                                 :prepend t        ; properties
-                                 :empty-lines 1    ; properties
-                                 :created t        ; properties
-                                 :kill-buffer t) ; properties
-
-                                ))
-
-#+END_SRC
-** Python Configuration
-Configure [[https://github.com/jorgenschaefer/elpy][Elpy]]
-#+BEGIN_SRC emacs-lisp
-  (use-package elpy
-    :ensure t
-    ;; :defer t
+  (use-package nerd-icons-completion
+    :after marginalia
     :config
-    (progn
-      (elpy-enable)
-      (setq elpy-rpc-python-command "python3")))
-
+    (nerd-icons-completion-mode 1)
+    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 #+END_SRC
 
-** Electric operator
-Configure [[https://github.com/davidshepherd7/electric-operator][Electric Operator]] mode
+* In-buffer completion: corfu + cape
+
+Replaces company. Child-frame UI, snappier.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package corfu
+    :demand t
+    :init (global-corfu-mode 1)
+    :config
+    (setq corfu-cycle t
+          corfu-auto t
+          corfu-auto-delay 0.1
+          corfu-auto-prefix 2
+          corfu-quit-no-match 'separator))
+
+  (use-package cape
+    :demand t
+    :init
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file))
+#+END_SRC
+
+* LSP via eglot (built-in)
+
+Replaces elpy and works for most languages out of the box.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package eglot
+    :straight nil                        ; built-in since Emacs 29
+    :hook ((python-mode . eglot-ensure)
+           (python-ts-mode . eglot-ensure)
+           (js-mode . eglot-ensure)
+           (typescript-mode . eglot-ensure)
+           (rust-mode . eglot-ensure)
+           (go-mode . eglot-ensure))
+    :config
+    ;; Speed up eglot for snappier interaction.
+    (setq eglot-events-buffer-size 0
+          eglot-autoshutdown t))
+#+END_SRC
+
+* Magit — git porcelain
+
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :bind ("C-x g" . magit-status))
+#+END_SRC
+
+* Electric operator (auto-spaces around operators)
+
 #+BEGIN_SRC emacs-lisp
   (use-package electric-operator
-    :ensure t
-    :defer t
-    :config
-    (add-hook 'python-mode-hook #'electric-operator-mode))
+    :hook (python-mode . electric-operator-mode))
 #+END_SRC
 
-** Ivy, Swiper and Counsel
+* Productivity helpers
 
-*** Ivy
-Configurations for [[https://github.com/abo-abo/swiper][Ivy mode]].
-#+BEGIN_SRC emacs-lisp
-  (use-package ivy
-    :diminish ivy
-    :ensure t
-    :config
-    (progn
-      (ivy-mode 1)
-      (setq ivy-use-virtual-buffers t)
-      (setq ivy-virtual-abbreviate 'full) ; Show full virtual file paths
-      (setq ivy-count-format "%d/%d ")
-      (setq ivy-extra-directories nil)))
-#+END_SRC
-
-*** Swiper
-#+BEGIN_SRC emacs-lisp
-  (use-package swiper
-    :ensure t
-    :config
-    (progn
-      (global-set-key (kbd "C-s") 'swiper)))
-#+END_SRC
-
-
-*** Configuration for ivy-bibtex
-#+BEGIN_SRC emacs-lisp
-    (use-package ivy-bibtex
-      :ensure t
-      :defer t
-      :config
-      ( progn
-        (setq bibtex-completion-bibliography "~/notes/articles.bib"
-              bibtex-completion-library-path "~/notes/pdfs/"
-              bibtex-completion-notes-path "~/notes/articles.org")
-        ))
-
-#+END_SRC
-
-** pdf-tools
-#+BEGIN_SRC emacs-lisp
-  ;; (defun my-pdf-tools-hook()
-  ;;   (linum-mode -1) ; line numbers choke emacs
-  ;;   )
-#+END_SRC
-
-
-(not using require as its not necessary that I have sudo privileges on the machine 
-to install pdf-tools system dependencies)
-
-Adding the following keybinds:
-| key | function        |
-|-----+-----------------|
-| h   | highlight       |
-| d   | delete          |
-| t   | text annotation |
-|     |                 |
-
-Also, setup C-s to do regular isearch instead of using Swiper as that searches the binary of the pdf
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package pdf-tools
-  ;;   :config
-  ;;   (pdf-tools-install)
-  ;;   (add-hook 'pdf-view-mode-hook 'my-pdf-tools-hook)
-  ;;   (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
-  ;;   (define-key pdf-view-mode-map (kbd "t") 'pdf-annot-add-text-annotation)
-  ;;   (define-key pdf-view-mode-map (kbd "d") 'pdf-annot-delete)
-  ;;   (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
-#+END_SRC
-
-** Undo / Redo
-Setup [[https://www.emacswiki.org/emacs/UndoTree][undo-tree]] for easy undo/redos. Config from [[https://github.com/sachac/.emacs.d/blob/gh-pages/Sacha.org#undo-tree-mode---visualize-your-undos-and-branches]].
-#+BEGIN_SRC emacs-lisp
-  (use-package undo-tree
-    :ensure t
-    :diminish undo-tree-mode
-    :config
-    (progn
-      (global-undo-tree-mode)
-      (setq undo-tree-visualizer-timestamps t)
-      (setq undo-tree-visualizer-diff t)))
-#+END_SRC
-
-** Productivity Tools
-
-*** Which key
-Install [[https://github.com/justbur/emacs-which-key][which key]]
 #+BEGIN_SRC emacs-lisp
   (use-package which-key
-    :ensure t
+    :demand t
     :config
-    (progn
-      (which-key-setup-minibuffer)
-      (which-key-mode))
-     )
+    (which-key-setup-minibuffer)
+    (which-key-mode 1))
+
+  (use-package hydra)
+
+  (use-package undo-tree
+    :demand t
+    :diminish undo-tree-mode
+    :config
+    (setq undo-tree-visualizer-timestamps t
+          undo-tree-visualizer-diff       t
+          ;; Keep undo history files in one place rather than scattered.
+          undo-tree-history-directory-alist
+          `(("." . ,(expand-file-name "undo-tree-history" user-emacs-directory))))
+    (global-undo-tree-mode 1))
 #+END_SRC
 
-*** Hydra
-Install [[https://github.com/abo-abo/hydra][hydra]]
+* Org mode (minimal)
+
+Loaded only when an =.org= file is opened. No project-specific paths or
+capture templates — re-add them here when an org workflow comes back.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package hydra
-    :ensure t
-    )
+  (use-package org
+    :straight nil                        ; built-in
+    :defer t
+    :config
+    (setq org-startup-indented t
+          org-log-done 'time))
 
+  (use-package org-bullets
+    :hook (org-mode . org-bullets-mode))
+#+END_SRC
 
+* COMMENTED FOR LATER — LaTeX / AUCTeX
+
+Restore by uncommenting and running:
+  brew install --cask tinytex skim
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package tex
+  ;;   :straight auctex
+  ;;   :defer t
+  ;;   :hook (LaTeX-mode . reftex-mode)
+  ;;   :config
+  ;;   (setq TeX-auto-save t
+  ;;         TeX-parse-self t
+  ;;         TeX-master nil
+  ;;         TeX-command-default "LatexMk"
+  ;;         TeX-view-program-selection '((output-pdf "Skim"))
+  ;;         TeX-view-program-list
+  ;;         '(("Skim"
+  ;;            "/Applications/Skim.app/Contents/SharedSupport/displayline -r %n %o %b"))
+  ;;         TeX-error-overview-open-after-TeX-run t
+  ;;         reftex-plug-into-AUCTeX t))
+  ;; (use-package auctex-latexmk
+  ;;   :after tex
+  ;;   :config (auctex-latexmk-setup))
 #+END_SRC

@@ -1,20 +1,60 @@
 [user]
 	name = Abhay Mittal
 	email = mittalabhay94@gmail.com
+
+[init]
+	defaultBranch = main
+
 [core]
 	autocrlf = input
 	safecrlf = warn
-	editor = emacs
+	editor = emacsclient -a "" -nw
+	excludesfile = ~/.config/git/ignore
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	light = false
+	side-by-side = true
+	line-numbers = true
+	syntax-theme = Catppuccin Mocha
+
 [push]
 	default = simple
+	autoSetupRemote = true
+
+[pull]
+	rebase = true
+
+[rebase]
+	autoStash = true
+	autoSquash = true
+
+[merge]
+	conflictStyle = zdiff3
+	tool = vimdiff
+
+[diff]
+	algorithm = histogram
+	colorMoved = default
+
 [color]
 	ui = true
 	status = auto
 	branch = auto
-[alias]
 
+[column]
+	ui = auto
+
+[branch]
+	sort = -committerdate
+
+[alias]
 	hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
-[merge]
-	tool = kdiff3
-[diff]
-	guitool = kdiff3
+	s    = status -sb
+	co   = checkout
+	br   = branch
+	lg   = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all

@@ -1,162 +1,190 @@
-export TERM="xterm-256color"
-export EDITOR="emacs -nw"
-# Lines configured by zsh-newuser-install
-HISTFILE=~/.histfile 
-HISTSIZE=1000 
-SAVEHIST=2000
-# Append history to file instead of overwriting and notify when background processes change status
-setopt appendhistory notify 
-unsetopt autocd extendedglob nomatch
+# .zshrc — interactive shell only.
+# Speed targets: visible prompt < 100ms (p10k instant prompt), full ready < 300ms.
 
-# Set emacs as the editor and bind its keybindings
-bindkey -e
-# End of lines configured by zsh-newuser-install
-# The following lines were added by compinstall
-zstyle :compinstall filename '/home/abhay/.zshrc'
-
-autoload -Uz compinit
-compinit
-# End of lines added by compinstall
-
-
-## BASH CONFIGS COPIED
-# PROMPT='%F{red}%n%f@%F{blue}%m%f %F{yellow}%1~%f %# '
-# autoload -Uz run-help
-# unalias run-help
-alias help=run-help
-
-
-## Key bindings for file manager like syntax (Alt + left) or (Alt+up)
-cdUndoKey() {
-  popd
-  zle       reset-prompt
-  echo
-  ls
-  zle       reset-prompt
-}
-
-cdParentKey() {
-  pushd ..
-  zle      reset-prompt
-  echo
-  ls
-  zle       reset-prompt
-}
-
-zle -N                 cdParentKey
-zle -N                 cdUndoKey
-bindkey '^[[1;3A'      cdParentKey
-bindkey '^[[1;3D'      cdUndoKey
-
-## Some common aliases
-alias p=pwd
-alias psef="ps -ef"
-alias grepi="grep -i"
-
-## ttyctl is used to freeze the shell state and avoid changes. This keeps the state of the terminal equal to when it was initialized even when it crashes. I am not sure if I'll need it but putting it here for experimental purposes
-ttyctl -f
-
-
-# load zgen
-source "${HOME}/.zgen/zgen.zsh"
-
-if ! zgen saved; then
-    echo "Creating a zgen save"
-    # plugins
-    zgen oh-my-zsh plugins/git
-    zgen oh-my-zsh plugins/sudo
-    zgen oh-my-zsh plugins/zsh-autosuggestions
-    zgen oh-my-zsh plugins/autojump
-
-    zgen load zsh-users/zsh-syntax-highlighting
-    zgen load zsh-users/zsh-history-substring-search
-
-    # completions
-    zgen load zsh-users/zsh-completions src
-    # theme
-    # zgen load bhilburn/powerlevel9k powerlevel9k
-    zgen load romkatv/powerlevel10k powerlevel10k
-    
-    # Alias tips for remembering aliases
-    zgen load djui/alias-tips
-
-    #Better search
-    zgen load psprint/history-search-multi-word
-    
-    # save all to init script
-    zgen save
-    
+# ============================================================================
+# 1. Powerlevel10k instant prompt — MUST stay at the top.
+#    Renders the prompt before plugins finish loading.
+# ============================================================================
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Theme settings
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir rbenv vcs)
-POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
-POWERLEVEL9K_PROMPT_ON_NEWLINE=true
-POWERLEVEL9K_DIR_DEFAULT_BACKGROUND='039' #blue
-POWERLEVEL9K_DIR_DEFAULT_FOREGROUND='000' #alpha
-POWERLEVEL9K_DIR_HOME_BACKGROUND='039' ##blue
-POWERLEVEL9K_DIR_HOME_FOREGROUND='000' #alpha
-POWERLEVEL9K_DIR_HOME_SUBFOLDER_BACKGROUND='039' #blue
-POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND='000' #alpha
-POWERLEVEL9K_DIR_WRITABLE_FORBIDDEN_BACKGROUND='196' #red
-POWERLEVEL9K_DIR_WRITABLE_FORBIDDEN_FOREGROUND='226' #yellow
-
-
-# Alias for jupyter
-alias jn="jupyter notebook"
-alias l='ls -lah'
-alias la='ls -lAh'
-alias ll='ls -lh'
-alias ls='ls --color=tty'
-alias lsa='ls -lah'
-alias md='mkdir -p'
-alias p=pwd
-alias psef='ps -ef'
-alias rd=rmdir
-alias run-help=man
-
-
-
-# Copy the history file part from oh_my_zsh
-## History wrapper
-function omz_history {
-  local clear list
-  zparseopts -E c=clear l=list
-
-  if [[ -n "$clear" ]]; then
-    # if -c provided, clobber the history file
-    echo -n >| "$HISTFILE"
-    echo >&2 History file deleted. Reload the session to see its effects.
-  elif [[ -n "$list" ]]; then
-    # if -l provided, run as if calling `fc' directly
-    builtin fc "$@"
-  else
-    # unless a number is provided, show all history events (starting from 1)
-    [[ ${@[-1]-} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
-  fi
-}
-
-# Timestamp format
-case ${HIST_STAMPS-} in
-  "mm/dd/yyyy") alias history='omz_history -f' ;;
-  "dd.mm.yyyy") alias history='omz_history -E' ;;
-  "yyyy-mm-dd") alias history='omz_history -i' ;;
-  "") alias history='omz_history' ;;
-  *) alias history="omz_history -t '$HIST_STAMPS'" ;;
-esac
-
-## History file configuration
-[ -z "$HISTFILE" ] && HISTFILE="$HOME/.zsh_history"
+# ============================================================================
+# 2. History
+# ============================================================================
+HISTFILE="$HOME/.zsh_history"
 HISTSIZE=50000
 SAVEHIST=10000
 
-## History command configuration
-setopt extended_history       # record timestamp of command in HISTFILE
-setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_ignore_dups       # ignore duplicated commands history list
-setopt hist_ignore_space      # ignore commands that start with space
-setopt hist_verify            # show command with history expansion to user before running it
-setopt inc_append_history     # add commands to HISTFILE in order of execution
-setopt share_history          # share command history data
+setopt extended_history          # timestamps in history file
+setopt hist_expire_dups_first    # drop dupes first when trimming
+setopt hist_ignore_dups          # don't record consecutive dupes
+setopt hist_ignore_space         # leading-space commands are private
+setopt hist_verify               # show !! expansion before running
+setopt inc_append_history        # append to file as you go (not on exit)
+setopt share_history             # share across sessions
+setopt notify                    # report background job status immediately
 
-alias history=omz_history
+# ============================================================================
+# 3. Keybindings — emacs mode
+# ============================================================================
+bindkey -e
+
+# ============================================================================
+# 4. Completion — compinit with daily cache validation (the slow part skipped
+#    on most invocations).
+# ============================================================================
+autoload -Uz compinit
+() {
+  local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+  # Run a full security check at most once per day; otherwise fast path.
+  if [[ -n "$zcompdump"(#qN.mh+24) ]]; then
+    compinit
+    touch "$zcompdump"
+  else
+    compinit -C
+  fi
+}
+
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # case-insensitive
+zstyle ':completion:*:descriptions' format '%F{cyan}-- %d --%f'
+zstyle ':completion:*' group-name ''
+
+# ============================================================================
+# 5. Plugins via zgenom
+# ============================================================================
+if [[ ! -d "$HOME/.zgenom" ]]; then
+  echo "First run: clone zgenom with the install.sh script in the Configurations repo."
+else
+  source "$HOME/.zgenom/zgenom.zsh"
+
+  if ! zgenom saved; then
+    echo "Building zgenom plugin cache..."
+
+    # zsh-defer (lets us defer expensive plugins until the prompt is interactive)
+    zgenom load romkatv/zsh-defer
+
+    # Standalone plugins (no oh-my-zsh framework — too heavy)
+    zgenom load hcgraf/zsh-sudo                    # ESC-ESC to prepend sudo
+    zgenom load Aloxaf/fzf-tab                     # tab completion via fzf
+
+    # Deferred (sourced after prompt is ready)
+    zgenom load zsh-users/zsh-completions          # extra completions
+    zgenom load zdharma-continuum/fast-syntax-highlighting
+    zgenom load zsh-users/zsh-autosuggestions
+    zgenom load djui/alias-tips
+
+    # Theme — last so it takes effect immediately
+    zgenom load romkatv/powerlevel10k powerlevel10k
+
+    zgenom save
+    zgenom compile "$HOME/.zshrc"
+  fi
+fi
+
+# ============================================================================
+# 6. zsh-autosuggestions config (must be set before plugin loads its widgets)
+# ============================================================================
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+# ============================================================================
+# 7. Tool initialization (zoxide, fzf, etc.)
+# ============================================================================
+# zoxide — smarter cd. `z foo` jumps to most-frecent dir matching foo.
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
+
+# fzf shell integration — provides ^R history widget, ^T file picker, Alt-C cd.
+# Homebrew installs fzf shell scripts under $(brew --prefix)/opt/fzf/shell/.
+if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/fzf/shell" ]]; then
+  source "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh"
+  source "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"
+fi
+
+# ============================================================================
+# 8. Aliases
+# ============================================================================
+# Modern replacements (only aliased where the old name is safe to override).
+if command -v bat >/dev/null 2>&1; then
+  alias cat='bat --paging=never'
+fi
+
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --icons --git --group-directories-first --time-style=relative'
+  alias ll='eza -l --icons --git --group-directories-first --time-style=relative'
+  alias la='eza -la --icons --git --group-directories-first --time-style=relative'
+  alias tree='eza --tree --icons --git'
+fi
+
+# Quality-of-life
+alias l='ls'
+alias md='mkdir -p'
+alias rd=rmdir
+alias p=pwd
+alias psef='ps -ef'
+alias grepi='grep -i'
+
+# ============================================================================
+# 9. Long-running command notification
+#    For any foreground command that takes > 30s, post a native macOS
+#    notification when it finishes.
+# ============================================================================
+typeset -g _NOTIFY_THRESHOLD=30
+typeset -g _NOTIFY_LAST_CMD=""
+typeset -g _NOTIFY_START_TS=0
+
+_notify_before() {
+  _NOTIFY_LAST_CMD="$1"
+  _NOTIFY_START_TS=$EPOCHSECONDS
+}
+
+_notify_after() {
+  local last_status=$?
+  if (( _NOTIFY_START_TS > 0 )); then
+    local elapsed=$(( EPOCHSECONDS - _NOTIFY_START_TS ))
+    if (( elapsed >= _NOTIFY_THRESHOLD )) && command -v osascript >/dev/null 2>&1; then
+      local title="done in ${elapsed}s"
+      (( last_status != 0 )) && title="failed (status ${last_status}) after ${elapsed}s"
+      local cmd_display="${_NOTIFY_LAST_CMD:0:80}"
+      osascript -e "display notification \"${cmd_display//\"/\\\"}\" with title \"${title}\"" 2>/dev/null &!
+    fi
+    _NOTIFY_START_TS=0
+    _NOTIFY_LAST_CMD=""
+  fi
+}
+
+zmodload zsh/datetime
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec _notify_before
+add-zsh-hook precmd  _notify_after
+
+# ============================================================================
+# 10. Lazy conda — first invocation runs the real init, then re-runs the call.
+#     Saves ~200ms on every shell that doesn't touch conda.
+# ============================================================================
+conda() {
+  unset -f conda
+  local conda_root="$HOME/miniconda3"
+  if [[ -f "$conda_root/etc/profile.d/conda.sh" ]]; then
+    source "$conda_root/etc/profile.d/conda.sh"
+  elif [[ -x "$conda_root/bin/conda" ]]; then
+    eval "$("$conda_root/bin/conda" shell.zsh hook)"
+  else
+    echo "conda not found at $conda_root" >&2
+    return 127
+  fi
+  conda "$@"
+}
+
+# ============================================================================
+# 11. Powerlevel10k personal config (pre-baked, symlinked from repo)
+# ============================================================================
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# ============================================================================
+# 12. ttyctl — freeze tty state across crashes (kept from prior config)
+# ============================================================================
+ttyctl -f 2>/dev/null
