@@ -122,6 +122,9 @@ config.keys = {
 
   -- Window
   { key = 'Enter', mods = 'CMD', action = act.ToggleFullScreen },
+
+  -- Shift+Enter → newline (Claude Code, shells that honor ESC+CR)
+  { key = 'Enter', mods = 'SHIFT', action = act.SendString '\x1b\r' },
   { key = 'k',     mods = 'CMD', action = act.ClearScrollback 'ScrollbackAndViewport' },
 
   -- Copy mode

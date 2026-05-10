@@ -98,10 +98,14 @@ if command -v zoxide >/dev/null 2>&1; then
 fi
 
 # fzf shell integration — provides ^R history widget, ^T file picker, Alt-C cd.
-# Homebrew installs fzf shell scripts under $(brew --prefix)/opt/fzf/shell/.
+# Homebrew installs the scripts under $(brew --prefix)/opt/fzf/shell/.
+# Debian/Ubuntu's `fzf` package installs them under /usr/share/doc/fzf/examples/.
 if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/fzf/shell" ]]; then
   source "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh"
   source "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"
+elif [[ -d /usr/share/doc/fzf/examples ]]; then
+  [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+  [[ -f /usr/share/doc/fzf/examples/completion.zsh  ]] && source /usr/share/doc/fzf/examples/completion.zsh
 fi
 
 # ============================================================================
